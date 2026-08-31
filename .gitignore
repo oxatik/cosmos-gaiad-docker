@@ -1,0 +1,4 @@
+.env
+*.log
+prometheus-data/
+gaiad-data/

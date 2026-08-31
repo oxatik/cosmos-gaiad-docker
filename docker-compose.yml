@@ -1,0 +1,59 @@
+services:
+  gaiad-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GAIA_VERSION: ${GAIA_VERSION:-v21.0.0}
+    image: cosmos-gaiad:${GAIA_VERSION:-v21.0.0}
+    container_name: gaiad-node
+    restart: unless-stopped
+    environment:
+      CHAIN_ID: ${CHAIN_ID:-cosmoshub-4}
+      MONIKER: ${MONIKER:-docker-gaia-node}
+      GENESIS_URL: ${GENESIS_URL:-}
+      SEEDS: ${SEEDS:-}
+      PERSISTENT_PEERS: ${PERSISTENT_PEERS:-}
+    ports:
+      - "26656:26656"
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+      - "26660:26660"
+    volumes:
+      - gaiad-data:/root/.gaia
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cosmos-net
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: gaiad-prometheus
+    restart: unless-stopped
+    depends_on:
+      - gaiad-node
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "9091:9090"
+    networks:
+      - cosmos-net
+
+volumes:
+  gaiad-data:
+    name: gaiad-data
+  prometheus-data:
+    name: gaiad-prometheus-data
+
+networks:
+  cosmos-net:
+    driver: bridge

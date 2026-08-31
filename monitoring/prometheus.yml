@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "gaiad"
+    static_configs:
+      - targets: ["gaiad-node:26660"]
+        labels:
+          chain: "cosmoshub-4"
+          service: "gaiad"
